@@ -66,6 +66,11 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           platforms: linux/arm64
 
+      - name: Download Mend CLI & Run a Scan
+        run: |
+          curl https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend && chmod +x /usr/local/bin/mend
+          mend image ${{ env.IMAGE_NAME }}:${{ github.sha }} --format sarif --filename mend-results.sarif --local-pull
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -84,6 +89,13 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+          category: trivy
+
+      - name: Upload Trivy SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'mend-results.sarif'
+          category: mend
 
       - name: Pushing multi-architecture image locally
         run: docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
