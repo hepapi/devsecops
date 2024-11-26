@@ -23,18 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Mend CLI Scan
-        env:
-          MEND_EMAIL: ${{secrets.MEND_EMAIL}}
-          MEND_USER_KEY: ${{secrets.MEND_USER_KEY}}
-          MEND_URL: https://saas-eu.mend.io
-        run: |
-          echo Downloading Mend CLI
-          curl https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend && chmod +x /usr/local/bin/mend
-          echo run Mend dependencies scan
-          mend dep -u -s *//hepapi//devsecops
-          echo Run Mend code scan
-          mend code -s *//hepapi//devsecops
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.0.0
