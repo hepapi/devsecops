@@ -20,22 +20,22 @@ jobs:
       image_tag: ${{ github.sha }}
 
   mend-scan:
-    uses: ./.github/workflows/mend-scan.yml
+    uses: ./.github/workflows/mend-scan.yaml
     needs: scan-dockerfile-build-image
     with:
       image_name: ${{ env.IMAGE_NAME }}
       image_tag: ${{ github.sha }}
 
   trivy-scan:
-    uses: ./.github/workflows/trivy-image-scan.yml
+    uses: ./.github/workflows/trivy-image-scan.yaml
     needs: scan-dockerfile-build-image
     with:
       image_name: ${{ env.IMAGE_NAME }}
       image_tag: ${{ github.sha }}
 
   push-image:
-    uses: ./.github/workflows/push-image.yml
-    needs: [neuvector-scan, mend-scan, trivy-image-scan]
+    uses: ./.github/workflows/push-image.yaml
+    needs: [neuvector-scan, mend-scan, trivy-scan]
     with:
       image_name: ${{ env.IMAGE_NAME }}
       image_tag: ${{ github.sha }}
