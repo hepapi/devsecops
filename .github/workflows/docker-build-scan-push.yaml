@@ -1,116 +1,116 @@
-# name: Create and publish a Docker image
+name: Create and publish a Docker image
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# env:
-#   REGISTRY: docker.io
-#   IMAGE_NAME: hepapi/devsecops
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: hepapi/devsecops
 
-# jobs:
-#   build-scan-and-push-image:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: write
-#       packages: write
-#       attestations: write
-#       id-token: write
-#       security-events: write
+jobs:
+  build-scan-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      attestations: write
+      id-token: write
+      security-events: write
 
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
 
-#       - name: Set up QEMU
-#         uses: docker/setup-qemu-action@v3.0.0
-#         with:
-#           platforms: 'arm64'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.0.0
+        with:
+          platforms: 'arm64'
 
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-#       - name: Scan Dockerfile with Conftest
-#         uses: instrumenta/conftest-action@master
-#         continue-on-error: true
-#         with:
-#           files: Dockerfile
-#           policy: dockerfile-conftest.rego
+      - name: Scan Dockerfile with Conftest
+        uses: instrumenta/conftest-action@master
+        continue-on-error: true
+        with:
+          files: Dockerfile
+          policy: dockerfile-conftest.rego
 
-#       - name: Log in to the Container registry
-#         uses: docker/login-action@v3
-#         with:
-#           registry: ${{ env.REGISTRY }}
-#           username: ${{ secrets.DOCKER_USERNAME }}
-#           password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       
-#       - name: Build multi-architecture image locally
-#         uses: docker/build-push-action@v6
-#         with:
-#           push: false
-#           load: true
-#           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-#           platforms: linux/arm64
+      - name: Build multi-architecture image locally
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          platforms: linux/arm64
 
-#       - name: Scan Image via NeuVector
-#         uses: neuvector/scan-action@main
-#         with:
-#           image-repository: ${{ env.IMAGE_NAME }}
-#           image-tag: ${{ github.sha }}
-#           min-high-cves-to-fail: "150"
-#           min-medium-cves-to-fail: "150"
-#           format: 'sarif'
-#           filename: 'neuvector-results.sarif'
+      - name: Scan Image via NeuVector
+        uses: neuvector/scan-action@main
+        with:
+          image-repository: ${{ env.IMAGE_NAME }}
+          image-tag: ${{ github.sha }}
+          min-high-cves-to-fail: "150"
+          min-medium-cves-to-fail: "150"
+          format: 'sarif'
+          filename: 'neuvector-results.sarif'
 
-#       - name: Mend CLI Scan
-#         env:
-#           MEND_EMAIL: ${{secrets.MEND_EMAIL}}
-#           MEND_USER_KEY: ${{secrets.MEND_USER_KEY}}
-#           MEND_URL: https://saas-eu.mend.io
-#         run: |
-#           echo Downloading Mend CLI
-#           curl https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend && chmod +x /usr/local/bin/mend
-#           echo run Mend dependencies scan
-#           mend dep -u -s *//hepapi//devsecops
-#           echo Run Mend code scan
-#           mend code -s *//hepapi//devsecops
-#           echo Run Mend Image Scan
-#           mend image ${{ env.IMAGE_NAME }}:${{ github.sha }} --format sarif --filename mend-results.sarif --local-pull -s "*//hepapi//devsecops"
+      - name: Mend CLI Scan
+        env:
+          MEND_EMAIL: ${{secrets.MEND_EMAIL}}
+          MEND_USER_KEY: ${{secrets.MEND_USER_KEY}}
+          MEND_URL: https://saas-eu.mend.io
+        run: |
+          echo Downloading Mend CLI
+          curl https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend && chmod +x /usr/local/bin/mend
+          echo run Mend dependencies scan
+          mend dep -u -s *//hepapi//devsecops
+          echo Run Mend code scan
+          mend code -s *//hepapi//devsecops
+          echo Run Mend Image Scan
+          mend image ${{ env.IMAGE_NAME }}:${{ github.sha }} --format sarif --filename mend-results.sarif --local-pull -s "*//hepapi//devsecops"
 
 
-#       - name: Run Trivy vulnerability scanner
-#         uses: aquasecurity/trivy-action@master
-#         with:
-#           image-ref: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
-#           format: 'sarif'
-#           output: 'trivy-results.sarif'
-#           exit-code: '0'
-#           ignore-unfixed: true
-#           vuln-type: 'os,library'
-#           severity: 'CRITICAL,HIGH'
-#         env:
-#           TRIVY_PLATFORM: linux/arm64
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_PLATFORM: linux/arm64
 
-#       - name: Upload Neuvector SARIF Report
-#         uses: github/codeql-action/upload-sarif@v3
-#         with:
-#           sarif_file: 'neuvector-results.sarif'
-#           category: neuvector
+      - name: Upload Neuvector SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'neuvector-results.sarif'
+          category: neuvector
 
-#       - name: Upload Trivy SARIF Report
-#         uses: github/codeql-action/upload-sarif@v3
-#         with:
-#           sarif_file: 'trivy-results.sarif'
-#           category: trivy
+      - name: Upload Trivy SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: trivy
 
-#       - name: Upload Mend SARIF Report
-#         uses: github/codeql-action/upload-sarif@v3
-#         with:
-#           sarif_file: 'mend-results.sarif'
-#           category: mend
+      - name: Upload Mend SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'mend-results.sarif'
+          category: mend
 
-#       - name: Pushing multi-architecture image locally
-#         run: docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Pushing multi-architecture image locally
+        run: docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
 

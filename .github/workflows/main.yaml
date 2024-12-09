@@ -1,42 +1,28 @@
-name: Full Pipeline
+name: Main Workflow
 
 on:
   push:
     branches:
       - main
 
-env:
-  image_name: hepapi/devsecops
-  image_tag: ${{ github.sha }}
-
 jobs:
-  scan-dockerfile-build-image:
-    uses: ./.github/workflows/docker-build.yaml
+  call-build-image:
+    uses: ./.github/workflows/build-image.yml
 
-  neuvector-scan:
+
+  call-neuvector-scan:
+    needs: call-build-image
     uses: ./.github/workflows/neuvector-scan.yml
-    needs: scan-dockerfile-build-image
-    with:
-      image_name: ${{ env.image_name }}
-      image_tag: ${{ env.image_tag }}
 
-  mend-scan:
-    uses: ./.github/workflows/mend-scan.yaml
-    needs: scan-dockerfile-build-image
-    with:
-      image_name: ${{ env.image_name }}
-      image_tag: ${{ env.image_tag }}
+  call-mend-scan:
+    needs: call-build-image
+    uses: ./.github/workflows/mend-scan.yml
 
-  trivy-scan:
-    uses: ./.github/workflows/trivy-image-scan.yaml
-    needs: scan-dockerfile-build-image
-    with:
-      image_name: ${{ env.image_name }}
-      image_tag: ${{ env.image_tag }}
+  call-trivy-scan:
+    needs: call-build-image
+    uses: ./.github/workflows/trivy-scan.yml
 
-  push-image:
-    uses: ./.github/workflows/push-image.yaml
-    needs: [neuvector-scan, mend-scan, trivy-scan]
-    with:
-      image_name: ${{ env.image_name }}
-      image_tag: ${{ env.image_tag }}
+  call-push-image:
+    needs: call-build-image  # Build iş akışı tamamlandıktan sonra Push işlemi yapılacak
+    uses: ./.github/workflows/push-image.yml
+

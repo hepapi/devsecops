@@ -1,26 +1,22 @@
-name: NeuVector Scan
+name: Neuvector Scan
 
 on:
   workflow_call:
-    inputs:
-      image_name:
-        required: true
-        type: string
-      image_tag:
-        required: true
-        type: string
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: hepapi/devsecops
 
 jobs:
-  neuvector-scan:
+  scan-image-with-neuvector:
     runs-on: ubuntu-latest
-
     steps:
+
       - name: Scan Image via NeuVector
         uses: neuvector/scan-action@main
         with:
-          image-repository: ${{ inputs.image_name }}
-          image-tag: ${{ inputs.image_tag }}
+          image-repository: ${{ env.IMAGE_NAME }}
+          image-tag: ${{ github.sha }}
           min-high-cves-to-fail: "150"
           min-medium-cves-to-fail: "150"
           output: csv
-
