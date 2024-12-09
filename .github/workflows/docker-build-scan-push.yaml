@@ -54,6 +54,15 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           platforms: linux/arm64
 
+      - name: Scan Image
+        uses: neuvector/scan-action@main
+        with:
+          image-repository: ${{ env.IMAGE_NAME }}
+          image-tag: ${{ github.sha }}
+          min-high-cves-to-fail: "150"
+          min-medium-cves-to-fail: "150"
+          output: text
+
       - name: Mend CLI Scan
         env:
           MEND_EMAIL: ${{secrets.MEND_EMAIL}}
