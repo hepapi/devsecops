@@ -61,8 +61,7 @@ jobs:
           image-tag: ${{ github.sha }}
           min-high-cves-to-fail: "150"
           min-medium-cves-to-fail: "150"
-          format: 'sarif'
-          filename: 'neuvector-results.sarif'
+          output: csv
 
       - name: Mend CLI Scan
         env:
@@ -93,11 +92,6 @@ jobs:
         env:
           TRIVY_PLATFORM: linux/arm64
 
-      - name: Upload Neuvector SARIF Report
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'neuvector-results.sarif'
-          category: neuvector
 
       - name: Upload Trivy SARIF Report
         uses: github/codeql-action/upload-sarif@v3
