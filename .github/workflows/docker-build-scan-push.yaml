@@ -62,7 +62,7 @@ jobs:
           min-high-cves-to-fail: "150"
           min-medium-cves-to-fail: "150"
           format: 'sarif'
-          output: 'neuvector-results.sarif'
+          filename: 'neuvector-results.sarif'
 
       - name: Mend CLI Scan
         env:
