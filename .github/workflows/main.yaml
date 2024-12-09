@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: hepapi/devsecops
-  IMAGE_TAG: ${{ github.sha }}
+  image_name: hepapi/devsecops
+  image_tag: ${{ github.sha }}
 
 jobs:
   scan-dockerfile-build-image:
@@ -17,26 +17,26 @@ jobs:
     uses: ./.github/workflows/neuvector-scan.yml
     needs: scan-dockerfile-build-image
     with:
-      image_name: ${{ env.IMAGE_NAME }}
-      image_tag: ${{ env.IMAGE_TAG }}
+      image_name: ${{ env.image_name }}
+      image_tag: ${{ env.image_tag }}
 
   mend-scan:
     uses: ./.github/workflows/mend-scan.yaml
     needs: scan-dockerfile-build-image
     with:
-      image_name: ${{ env.IMAGE_NAME }}
-      image_tag: ${{ env.IMAGE_TAG }}
+      image_name: ${{ env.image_name }}
+      image_tag: ${{ env.image_tag }}
 
   trivy-scan:
     uses: ./.github/workflows/trivy-image-scan.yaml
     needs: scan-dockerfile-build-image
     with:
-      image_name: ${{ env.IMAGE_NAME }}
-      image_tag: ${{ env.IMAGE_TAG }}
+      image_name: ${{ env.image_name }}
+      image_tag: ${{ env.image_tag }}
 
   push-image:
     uses: ./.github/workflows/push-image.yaml
     needs: [neuvector-scan, mend-scan, trivy-scan]
     with:
-      image_name: ${{ env.IMAGE_NAME }}
-      image_tag: ${{ env.IMAGE_TAG }}
+      image_name: ${{ env.image_name }}
+      image_tag: ${{ env.image_tag }}
