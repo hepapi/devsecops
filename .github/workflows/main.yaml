@@ -1,0 +1,41 @@
+name: Full Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: hepapi/devsecops
+
+jobs:
+  scan-dockerfile-build-image:
+    uses: ./.github/workflows/build-image.yml
+
+  neuvector-scan:
+    uses: ./.github/workflows/neuvector-scan.yml
+    needs: scan-dockerfile-build-image
+    with:
+      image_name: ${{ env.IMAGE_NAME }}
+      image_tag: ${{ github.sha }}
+
+  mend-scan:
+    uses: ./.github/workflows/mend-scan.yml
+    needs: full-pipeline
+    with:
+      image_name: ${{ env.IMAGE_NAME }}
+      image_tag: ${{ github.sha }}
+
+  trivy-scan:
+    uses: ./.github/workflows/trivy-scan.yml
+    needs: full-pipeline
+    with:
+      image_name: ${{ env.IMAGE_NAME }}
+      image_tag: ${{ github.sha }}
+
+  push-image:
+    uses: ./.github/workflows/push-image.yml
+    needs: [neuvector-scan, mend-scan, trivy-scan]
+    with:
+      image_name: ${{ env.IMAGE_NAME }}
+      image_tag: ${{ github.sha }}

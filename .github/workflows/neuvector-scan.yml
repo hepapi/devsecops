@@ -1,0 +1,26 @@
+name: NeuVector Scan
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+
+jobs:
+  neuvector-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scan Image via NeuVector
+        uses: neuvector/scan-action@main
+        with:
+          image-repository: ${{ inputs.image_name }}
+          image-tag: ${{ inputs.image_tag }}
+          min-high-cves-to-fail: "150"
+          min-medium-cves-to-fail: "150"
+          output: csv
+
